@@ -57,5 +57,13 @@ class PhasePortrait:
 		chaoticity=chaoticity/np.max(chaoticity)
 		return x,p,chaoticity
 			
-
+	def png2husimi(self,dfile="SPP"):
+		x,p,chaoticity=self.getOrbits()
+		
+		fig, ax = plt.subplots(figsize=(self.dX,self.dP),frameon=False)
+		ax.set_xlim(-self.dX/2.0,self.dX/2.0)
+		ax.set_ylim(-self.dP/2.0,self.dP/2.0)
+		ax.scatter(modc(x,2*np.pi),p,c="black",s=1**2)
+		fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+		plt.savefig(dfile+".png",dpi=500)
 

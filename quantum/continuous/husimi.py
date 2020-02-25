@@ -71,16 +71,20 @@ class Husimi:
 		self.husimi=self.husimi/np.max(self.husimi)
 		
 		if datafile!="":
-
 			np.savez(datafile,"w",x=self.x,p=self.p,husimi=self.husimi)
 	
 		
-	def quickplot(self,datafile,SPSfile='',Dx=2*np.pi,Dp=4):
-		data=np.load(datafile+".npz")
-		husimi=data['husimi']
-		x=data['x']
-		p=data['p']
-		data.close()
+	def quickplot(self,datafile='',SPSfile='',Dx=2*np.pi,Dp=4):
+		if datafile!="":
+			data=np.load(datafile+".npz")
+			husimi=data['husimi']
+			x=data['x']
+			p=data['p']
+			data.close()
+		else:
+			x=self.x
+			p=self.p
+			husimi=self.husimi
 		
 		ax=plt.gca()
 		ax.set_aspect('equal')

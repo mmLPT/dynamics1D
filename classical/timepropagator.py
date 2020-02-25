@@ -17,8 +17,8 @@ class DiscreteTimePropagator:
 
 	def propagate(self,y):
 		ydot=np.zeros(y.shape) #y'
-		ydot[1]=y[1]-self.potential.dVdx(y[0]+0.5*y[1],t)
-		ydot[0]=y[0]+0.5*(yp[1]+y[1])
+		ydot[1]=y[1]-self.potential.dVdx(y[0]+0.5*y[1])
+		ydot[0]=y[0]+0.5*(ydot[1]+y[1])
 		return ydot
 		
 	# ~ def propagate(self,y):		# non symétrisé
