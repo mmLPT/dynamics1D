@@ -63,7 +63,7 @@ class TimePropagator(Operator):
 		
 		self.beta=beta # quasi-momentum
 		
-		self.Up=np.exp(-1j*((grid.p-self.beta)**2/4)*self.dt/grid.h)
+		self.Up=np.exp(-1j*((grid.p-self.beta*grid.h)**2/4)*self.dt/grid.h)
 		x,t=np.meshgrid(grid.x,np.arange(self.idtmax)*self.dt)	
 		self.Ux=np.exp(-1j*(self.potential.Vx(x,t))*self.dt/grid.h)
 			
