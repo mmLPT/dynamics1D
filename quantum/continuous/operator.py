@@ -12,7 +12,8 @@ class Operator:
 		self.h=grid.h
 		self.hermitian=hermitian
 		self.Mrepresentation=Mrepresentation #x or p depending on how you fillup M
-		self.M=np.zeros((self.N,self.N),dtype=np.complex_) # The operator representation
+		self.M=np.empty((self.N,self.N),dtype=np.complex_) # The operator representation
+
 		self.eigenval=np.zeros(self.N,dtype=np.complex_) 
 		self.eigenvec=[] # Eigenstates (from wave function class) id est can be used in both representation
 	
@@ -62,10 +63,10 @@ class TimePropagator(Operator):
 		self.dt=self.T0/self.idtmax # time step
 		
 		self.beta=beta # quasi-momentum
-		
 		self.Up=np.exp(-1j*((grid.p-self.beta*grid.h)**2/4)*self.dt/grid.h)
 		x,t=np.meshgrid(grid.x,np.arange(self.idtmax)*self.dt)	
 		self.Ux=np.exp(-1j*(self.potential.Vx(x,t))*self.dt/grid.h)
+
 			
 	def propagate(self,wf):
 		# Propagate over one period/kick/arbitray time 
@@ -80,6 +81,8 @@ class TimePropagator(Operator):
 		# Propagate N dirac in x representation, to get matrix representation
 		# of the quantum time propagator
 		self.Mrepresentation="x"
+		
+		print(self.M.shape)
 
 		for i in range(0,self.N):
 			wf=WaveFunction(self.grid)

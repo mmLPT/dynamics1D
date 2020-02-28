@@ -10,19 +10,20 @@ class Potential:
 		pass	
 
 class ModulatedPendulum(Potential):
-	def __init__(self,e,gamma,mw=np.cos,Fb=0):
+	def __init__(self,e,gamma,mw=np.cos,Fb=0,phi=0):
 		Potential.__init__(self)
 		
 		self.e=e
 		self.gamma=gamma
 		self.mw=mw
 		self.Fb=Fb	
+		self.phi=phi
 		
 	def Vx(self,x,t=0):
-		return -self.gamma*(1+self.e*self.mw(t))*np.cos(x)+self.Fb*x/(2*np.pi)
+		return -self.gamma*(1+self.e*self.mw(t))*np.cos(x+self.phi*np.sin(t))+self.Fb*x/(2*np.pi)
 	
 	def dVdx(self,x,t=0):
-		return self.gamma*(1+self.e*self.mw(t))*np.sin(x)+self.Fb/(2*np.pi)
+		return self.gamma*(1+self.e*self.mw(t))*np.sin(x+self.phi*np.sin(t))+self.Fb/(2*np.pi)
 		
 		
 class DoubleWell(Potential):

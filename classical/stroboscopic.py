@@ -21,9 +21,21 @@ class PhasePortrait:
 	# ~ def generateInitialCondition(self,i):
 		# ~ return np.array([rd.randint(0,101)/100.0*self.dX-self.dX*0.5,rd.randint(0,101)/100.0*self.dP-self.dP*0.5])
 		
+	# ~ def generateInitialCondition(self,i):
+		# ~ x0=np.linspace(0,self.dX*0.5,self.ny0)[i]
+		# ~ p0=0
+		# ~ return np.array([x0,p0])
+		
 	def generateInitialCondition(self,i):
-		x0=np.linspace(0,self.dX*0.5,self.ny0)[i]
-		p0=0
+		np0=int(self.dP/(self.dP+self.dX)*self.ny0)
+		nx0=self.ny0-np0
+
+		x0=np.linspace(-0.5*self.dX, 0.5*self.dX, nx0)
+		p0=np.linspace(-0.5*self.dP, 0.5*self.dP, np0)
+		
+		x0=np.concatenate((x0,np.zeros(np0)))[i]
+		p0=np.concatenate((np.zeros(nx0),p0))[i]
+		
 		return np.array([x0,p0])
 	
 	def computeOrbit(self,i):

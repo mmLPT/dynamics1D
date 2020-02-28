@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 # This script contains : 1 class
 # + class : grid
@@ -16,6 +15,8 @@ class Grid:
 			raise ValueError("Number of cells should be odd")
 		
 		self.n=np.arange(-int(0.5*(self.N-1)),int(0.5*(self.N+1)))
+		
+		self.ncenter=int(0.5*(self.N-1))
 		
 	
 	

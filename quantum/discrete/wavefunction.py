@@ -12,8 +12,14 @@ class WaveFunction:
 	def __init__(self,grid):
 		self.grid=grid
 		self.n=np.zeros(grid.N,dtype=np.complex_)
+		
+	def setState(self,state,*args):
+		if state=="dirac":
+			i0=args[0]+self.grid.ncenter
+			self.n[i0]=1.0
+			self.normalize()
 			
-	def normalize(self,xp):
+	def normalize(self):
 		self.n = self.n/np.sqrt(sum(abs(self.n)**2))
 	
 	# === Operations on wave function ==================================
