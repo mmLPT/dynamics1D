@@ -86,12 +86,13 @@ class Husimi:
 			p=self.p
 			husimi=self.husimi
 		
+		plt.clf()
 		ax=plt.gca()
 		ax.set_aspect('equal')
 		ax.set_ylim(-self.pmax/2,self.pmax/2)
 		ax.set_xlim(-self.xmax/2,self.xmax/2)
 		
-		cmap = plt.get_cmap("Reds")
+		cmap = plt.get_cmap("gnuplot2")
 		
 		if PPfile!="":
 			img=mpl.image.imread(PPfile+".png")
