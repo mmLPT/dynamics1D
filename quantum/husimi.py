@@ -74,7 +74,7 @@ class Husimi:
 			np.savez(datafile,"w",x=self.x,p=self.p,husimi=self.husimi)
 	
 		
-	def quickplot(self,datafile='',SPSfile='',Dx=2*np.pi,Dp=4):
+	def quickplot(self,datafile='',PPfile='',dX=2*np.pi,dP=4):
 		if datafile!="":
 			data=np.load(datafile+".npz")
 			husimi=data['husimi']
@@ -91,11 +91,11 @@ class Husimi:
 		ax.set_ylim(-self.pmax/2,self.pmax/2)
 		ax.set_xlim(-self.xmax/2,self.xmax/2)
 		
-		cmap = plt.get_cmap("jet")
+		cmap = plt.get_cmap("Reds")
 		
-		if SPSfile!="":
-			img=mpl.image.imread(SPSfile+".png")
-			ax.imshow(img,extent=[-Dx/2,Dx/2,-Dp/2, Dp/2])
+		if PPfile!="":
+			img=mpl.image.imread(PPfile+".png")
+			ax.imshow(img,extent=[-dX/2,dX/2,-dP/2, dP/2])
 			
 		ax.imshow(np.flipud(husimi),cmap=cmap,alpha=0.7,extent=[-self.xmax/2,self.xmax/2,-self.pmax/2, self.pmax/2])
 		# ~ contours=plt.contour(x,p,husimi,colors="k", levels=np.linspace(0.0,1.0,7,endpoint=True),linestyles="--",linewidths=1.0)
