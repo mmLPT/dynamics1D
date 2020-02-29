@@ -1,24 +1,28 @@
 import numpy as np
 from numpy.linalg import matrix_power
 
-from dynamics1D.quantum.continuous.grid import *
-from dynamics1D.quantum.continuous.wavefunction import *
+from dynamics1D.quantum.grid import *
+from dynamics1D.quantum.wavefunction import *
+
 
 class Operator:
-	# This class provides a discrete representation for an x/p acting operator
-	def __init__(self, grid,hermitian=False,Mrepresentation="x"):
+	# Abstract class for an x acting operator
+	
+	
+	def __init__(self, grid,hermitian=False):
 		self.grid=grid
 		self.N=grid.N
 		self.h=grid.h
 		self.hermitian=hermitian
-		self.Mrepresentation=Mrepresentation #x or p depending on how you fillup M
-		self.M=np.empty((self.N,self.N),dtype=np.complex_) # The operator representation
+
+		self.M=[] # Matrix of the operator in X basis !
 
 		self.eigenval=np.zeros(self.N,dtype=np.complex_) 
 		self.eigenvec=[] # Eigenstates (from wave function class) id est can be used in both representation
 	
 	def fillM(self):
 		# Fill the matrix representation of the operator
+		self.M=np.zeros((self.N,self.N),dtype=np.complex_)
 		pass
 					
 	def diagonalize(self):
@@ -31,19 +35,44 @@ class Operator:
 		else:
 			self.eigenval,eigenvec=np.linalg.eig(self.M)
 			
-		if self.Mrepresentation=="x": 
-			for i in range(0,self.N):
-				wf=WaveFunction(self.grid)
-				wf.x=eigenvec[:,i]
-				wf.normalize("x")
-				self.eigenvec.insert(i,wf)
+		for i in range(0,self.N):
+			wf=WaveFunction(self.grid)
+			wf.x=eigenvec[:,i]
+			wf.normalize("x")
+			self.eigenvec.insert(i,wf)
 				
-		def getxbraket(self,wf1,wf2):
-			if self.Mrepresentation=="x": 
-				return np.matmul(np.conjugate(wf1.x),np.matmul(self.M,wf2.x))
-			elif self.Mrepresentation=="p": 
-				return np.matmul(np.conjugate(wf1.x),np.matmul(self.M,wf2.x))
-				
+		def getbraket(self,wf1,wf2):
+			return np.matmul(np.conjugate(wf1.x),np.matmul(self.M,wf2.x))
+			
+class Hamiltonian(Operator):
+	def __init__(self,grid,potential,beta=0.0):
+		Operator.__init__(self,grid)
+		self.beta=beta
+		self.potential=potential
+		self.Hp=(grid.p-self.beta*grid.h)**2/2
+		self.Hx=self.potential.Vx(grid.x,0)
+		self.hermitian=True
+		
+	def diagonalize(self):
+		# Diagonalize, then compute quasi-energies
+		Operator.diagonalize(self)
+		ind=np.argsort(self.eigenval)
+		self.eigenvec=[self.eigenvec[i] for i in ind]
+		self.eigenval=self.eigenval[ind]	
+	
+	def fillM(self):
+		self.M=np.zeros((self.N,self.N),dtype=np.complex_)
+		for i in range(0,self.N):
+			wfx=WaveFunction(self.grid)
+			wfx.setState("diracx",i)
+			wfx.x=wfx.x*self.Hx
+			wfp=WaveFunction(self.grid)
+			wfp.setState("diracx",i)
+			wfp.p=wfp.p*self.Hp
+			wfp.p2x() 
+			wf=wfx+wfp
+			self.M[:,i]=wf.x
+	
 class TimePropagator(Operator):
 	# Class to be used to described time evolution operators such has
 	# |psi(t')>=U(t',t)|psi(t)> with U(t',t)=U(dt,0)^idtmax
@@ -80,13 +109,10 @@ class TimePropagator(Operator):
 	def fillM(self):
 		# Propagate N dirac in x representation, to get matrix representation
 		# of the quantum time propagator
-		self.Mrepresentation="x"
-		
-		print(self.M.shape)
+		self.M=np.zeros((self.N,self.N),dtype=np.complex_)
 
 		for i in range(0,self.N):
 			wf=WaveFunction(self.grid)
-			# ~ wf.setState("diracx",i0=i,norm=False) #Norm false to produce 'normalized' eigevalue
 			wf.setState("diracx",i)
 			self.propagate(wf)
 			wf.p2x()
@@ -171,6 +197,7 @@ class FloquetRandomPhasePropagator(FloquetPropagator):
 					
 	def propagate(self,wf):
 		# Propagate over one period/kick/arbitray time 
+		self.Up=np.exp(1j*(np.random.rand(self.N)*2*np.pi))
 		for idt in range(0,self.idtmax):
 			wf.p=wf.p*self.Up 
 			wf.p2x() 
@@ -178,6 +205,66 @@ class FloquetRandomPhasePropagator(FloquetPropagator):
 			wf.x2p() 
 			
 	def getFormFactor(self,it):
+		# Returns form factor for given time/n
 		n=int(it)
 		return abs(np.sum(self.eigenval**n))**2/self.N	
+		
+class DiscreteOperator:
+	def __init__(self, lattice):
+		self.lattice=lattice
+		self.N=lattice.N
+		self.h=lattice.h
+		self.M=[]
+		
+class TightBindingHamiltonian(DiscreteOperator):
+	def __init__(self,lattice,spectrumfile):
+		DiscreteOperator.__init__(self,lattice)
+
+		data=np.load(spectrumfile)
+		quasienergies=data['quasienergies'][:,0]
+		beta=data['beta'][:,0]*2*np.pi
+		data.close()
+
+		self.Vn=np.fft.rfft(quasienergies)/self.N
+		self.Vnth=np.zeros(self.Vn.size)
+		
+		self.M=np.zeros((self.N,self.N),dtype=np.complex_)
+		self.M[0]=np.concatenate((self.Vn,np.conjugate(np.flip(np.delete(self.Vn,0),axis=0))))
+		
+		for i in range(1,self.N):
+			self.M[i]=np.roll(self.M[0],i)	
+			
+		self.computeVnth()			
+				
+	def computeVnth(self):
+	
+		diff=quasienergies-np.roll(quasienergies,-1)
+		dbeta=0.5*(beta[1]-beta[0])
+
+		ind= ((np.diff(np.sign(np.diff(np.abs(diff)))) < 0).nonzero()[0]+1)
+		beta0=beta[ind]
+		W=diff[ind]
+		ind=beta0>0
+		beta0=beta0[ind]+dbeta
+		W=W[ind]
+		
+		n=np.arange(self.Vn.size)
+		n[0]=n[1]
+		
+		def Vnthfun(n,W,beta0):
+			return -W/(np.pi*n)*np.sin(beta0*n)
+		
+		for i in range(0,W.size):
+			self.Vnth+=Vnthfun(n,W[i],beta0[i])
+		
+		self.Vnth[0]=self.Vn[0]
+				
+class DiscreteTimePropagator(DiscreteOperator):
+	def __init__(self,grid,T0,hamiltonian):
+		DiscreteOperator.__init__(self,grid)
+		self.T0=T0
+		self.M=expm(-1j*hamiltonian.M*self.T0/self.h)
+	
+	def propagate(self,wf):
+		wf.n=np.matmul(self.M,wf.n)
 

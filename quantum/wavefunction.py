@@ -120,16 +120,12 @@ class WaveFunction:
 		# wf1//wf2 <-> |<wf1|wf2>|^2
 		return abs(sum(np.conj(self.x)*other.x)*self.grid.dx)**2
 		
-
 	def isSymX(self,sigma=2):
-
 		psix=np.flipud(self.x)+self.x
-
 		if  sum(np.conj(psix)*psix)*self.grid.dx > sigma:
 			return True
 		else:
-			return False
-			
+			return False		
 
 	def getMomentum(self,xp,q):
 		# Get sum |<psi|psi>|^2q
@@ -137,3 +133,60 @@ class WaveFunction:
 			return sum(abs(self.x)**(2*q)*self.grid.dx)
 		if xp=="p":
 			return sum(abs(self.p)**(2*q)*self.grid.dp)
+			
+class QuantumState:
+	def __init__(self,lattice):
+		self.lattice=lattice
+		self.n=np.zeros(lattice.N,dtype=np.complex_)
+		
+	def setState(self,state,*args):
+		if state=="dirac":
+			i0=args[0]+self.grid.ncenter
+			self.n[i0]=1.0
+			self.normalize()
+			
+	def normalize(self):
+		self.n = self.n/np.sqrt(sum(abs(self.n)**2))
+	
+	# === Operations on quantum states =================================
+	def __add__(self,other): 
+		# wf1+wf2 <-> |wf1>+|wf2>
+		wf=WaveFunction(self.lattice)
+		wf.n=self.n+other.n
+		return wf
+		
+	def __sub__(self,other): 
+		# wf1-wf2 <-> |wf1>-|wf2>
+		wf=WaveFunction(self.lattice)
+		wf.n=self.n-other.n
+		return wf
+		
+	def __rmul__(self,scalar): 
+		# a*wf <-> a|wf>
+		wf=WaveFunction(self.lattice)
+		wf.n=self.n*scalar
+		return wf
+		
+	def __mul__(self,scalar):
+		# wf*a <-> a|wf>
+		wf=WaveFunction(self.lattice)
+		wf.n=self.n*scalar
+		return wf
+		
+	def __truediv__(self,scalar): 
+		# wf/a <-> |wf>/a
+		wf=WaveFunction(self.lattice)
+		wf.n=self.n/scalar
+		return wf
+	
+	def __mod__(self,other): 
+		# wf1%wf2 <-> <wf1|wf2>
+		return sum(np.conj(self.n)*other.n)
+		
+	def __floordiv__(self,other): 
+		# wf1//wf2 <-> |<wf1|wf2>|^2
+		return abs(sum(np.conj(self.n)*other.n))**2	
+
+	def getMomentum(self,xp,q):
+		# Get sum |<psi|psi>|^2q
+		return sum(abs(self.n)**(2*q))

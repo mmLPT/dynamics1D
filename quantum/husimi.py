@@ -1,6 +1,5 @@
 import numpy as np
 
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 # ~ from matplotlib.colors import BoundaryNorm
@@ -61,6 +60,7 @@ class Husimi:
 	def compute(self,wf,datafile=""):
 		# Computes Husimi representation of a given wavefunction
 		# It returns a 1-normalized 2D-density
+			
 		psip=np.fft.fftshift(wf.p)
 		for ip in range(0,self.Np):	
 			p0=self.p[ip]
