@@ -34,7 +34,7 @@ class Husimi:
 		
 		# Building Husimi grid
 		self.Nx=int(self.xmax/self.sigmax*self.scale)
-		self.x=np.linspace(-self.xmax/2.0,self.xmax/2.0,self.Nx)
+		self.x=np.linspace(-self.xmax/2.0,self.xmax/2.0,self.Nx,endpoint=False)
 		self.Np=int(self.pmax/self.sigmap*self.scale)
 		self.p=np.linspace(-self.pmax/2.0,self.pmax/2.0,self.Np)
 		
@@ -66,7 +66,7 @@ class Husimi:
 			p0=self.p[ip]
 			phi1=np.exp(-(self.pshift[ip]-p0)**2/(2*self.sigmap**2))
 			for ix in range(0,self.Nx):
-				phi=phi1*np.exp(-(1j/self.h)*(self.x[ix]+self.xmax/2.0)*self.pshift[ip])
+				phi=phi1*np.exp(-(1j/self.h)*(self.x[ix]+self.dx+self.xmax/2.0)*self.pshift[ip])
 				self.husimi[ip][ix]= abs(sum(np.conj(phi)*psip))**2
 		self.husimi=self.husimi/np.max(self.husimi)
 		
@@ -89,17 +89,30 @@ class Husimi:
 		plt.clf()
 		ax=plt.gca()
 		ax.set_aspect('equal')
-		ax.set_ylim(-self.pmax/2,self.pmax/2)
-		ax.set_xlim(-self.xmax/2,self.xmax/2)
+		ax.set_ylim(-dP/2,dP/2)
+		ax.set_xlim(-dX/2,dX/2)
 		
-		cmap = plt.get_cmap("gnuplot2")
+		ax.set_xlabel("Position")
+		ax.set_ylabel("Vitesse")
+		ax.set_xticks([])
+		ax.set_yticks([])
+		
+		cmap = plt.get_cmap("Reds")
 		
 		if PPfile!="":
+			cmap = plt.get_cmap("gnuplot2")
+		
 			img=mpl.image.imread(PPfile+".png")
 			ax.imshow(img,extent=[-dX/2,dX/2,-dP/2, dP/2])
 			
-		ax.imshow(np.flipud(husimi),cmap=cmap,alpha=0.7,extent=[-self.xmax/2,self.xmax/2,-self.pmax/2, self.pmax/2])
+			ax.imshow(np.flipud(husimi),cmap=cmap,alpha=0.7,extent=[-self.xmax/2,self.xmax/2,-self.pmax/2, self.pmax/2])
+		else:
+			
+			ax.imshow(np.flipud(husimi),cmap=cmap,alpha=1,extent=[-self.xmax/2,self.xmax/2,-self.pmax/2, self.pmax/2])	
+			
 		# ~ contours=plt.contour(x,p,husimi,colors="k", levels=np.linspace(0.0,1.0,7,endpoint=True),linestyles="--",linewidths=1.0)
+		
+		ax.grid()
 
 		plt.show()
 	

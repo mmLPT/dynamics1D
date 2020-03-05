@@ -46,10 +46,10 @@ class WaveFunction:
 			
 	def normalize(self,xp):
 		if xp=="x":
-			self.x = self.x/np.sqrt(sum(abs(self.x)**2)*self.grid.dx)
+			self.x = self.x/np.sqrt(sum(abs(self.x)**2))
 			self.x2p()
 		elif xp=="p":
-			self.p = self.p/np.sqrt(sum(abs(self.p)**2)*self.grid.dp)
+			self.p = self.p/np.sqrt(sum(abs(self.p)**2))
 			self.p2x()
 		
 	def shift(self,xp,d0):
@@ -57,19 +57,17 @@ class WaveFunction:
 			self.p=self.p*np.exp(-1j*d0*self.grid.p/self.grid.h)
 			self.p2x()
 		elif xp=="p":
-			self.x=self.x*np.exp(1j*d0*self.grid.x/self.grid.h)
+			self.x=self.x*np.exp(-1j*d0*self.grid.x/self.grid.h)
 			self.x2p()
 		
 	# === Switching representation x <-> p =============================
 	def p2x(self):
 		# <p|psi> -> <x|psi>
-		# ~ self.x=np.fft.ifft(self.p)*self.grid.N
-		self.x=np.fft.ifft(self.p)*self.grid.N*self.grid.dp/np.sqrt(2*np.pi*self.grid.h)
+		self.x=np.fft.ifft(self.p,norm="ortho")
 		
 	def x2p(self):
 		# <x|psi> -> <p|psi>
-		# ~ self.p=np.fft.fft(self.x)/self.grid.N
-		self.p=np.fft.fft(self.x)*self.grid.dx/np.sqrt(2*np.pi*self.grid.h)
+		self.p=np.fft.fft(self.x,norm="ortho")
 	
 	# === Operations on wave function ==================================
 	def __add__(self,other): 
@@ -114,11 +112,11 @@ class WaveFunction:
 	
 	def __mod__(self,other): 
 		# wf1%wf2 <-> <wf1|wf2>
-		return sum(np.conj(self.x)*other.x)*self.grid.dx
+		return sum(np.conj(self.x)*other.x)
 		
 	def __floordiv__(self,other): 
 		# wf1//wf2 <-> |<wf1|wf2>|^2
-		return abs(sum(np.conj(self.x)*other.x)*self.grid.dx)**2
+		return abs(sum(np.conj(self.x)*other.x))**2
 		
 	def isSymX(self,sigma=2):
 		psix=np.flipud(self.x)+self.x
@@ -126,13 +124,13 @@ class WaveFunction:
 			return True
 		else:
 			return False		
-
+			
 	def getMomentum(self,xp,q):
 		# Get sum |<psi|psi>|^2q
 		if xp=="x":
-			return sum(abs(self.x)**(2*q)*self.grid.dx)
+			return sum(abs(self.x)**(2*q))
 		if xp=="p":
-			return sum(abs(self.p)**(2*q)*self.grid.dp)
+			return sum(abs(self.p)**(2*q))
 			
 class QuantumState:
 	def __init__(self,lattice):
@@ -141,7 +139,7 @@ class QuantumState:
 		
 	def setState(self,state,*args):
 		if state=="dirac":
-			i0=args[0]+self.grid.ncenter
+			i0=args[0]+self.lattice.ncenter
 			self.n[i0]=1.0
 			self.normalize()
 			

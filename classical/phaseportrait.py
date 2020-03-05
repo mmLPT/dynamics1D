@@ -12,7 +12,7 @@ class InitialConditionGenerator:
 		self.dP=dP
 		self.ny0=ny0
 		
-	def generate1(self,i):
+	def generateXP(self,i):
 		np0=int(self.dP/(self.dP+self.dX)*self.ny0)
 		nx0=self.ny0-np0
 
@@ -24,18 +24,31 @@ class InitialConditionGenerator:
 		
 		return np.array([x0,p0])
 		
-	def generate2(self,i):
+	def generateRandom(self,i):
 		return np.array([rd.randint(0,101)/100.0*self.dX-self.dX*0.5,rd.randint(0,101)/100.0*self.dP-self.dP*0.5])
 		
-	def generate3(self,i):
+	def generateXpos(self,i):
 		x0=np.linspace(0,self.dX*0.5,self.ny0)[i]
 		p0=0
 		return np.array([x0,p0])
 		
-	def generate4(self,i):
+	def generateX(self,i):
 		x0=np.linspace(-self.dX*0.5,self.dX*0.5,self.ny0)[i]
 		p0=0
 		return np.array([x0,p0])
+		
+	def generateXPpos(self,i):
+		np0=int(self.dP/(self.dP+self.dX)*self.ny0)
+		nx0=self.ny0-np0
+
+		x0=np.linspace(0, 0.5*self.dX, nx0)
+		p0=np.linspace(0, 0.5*self.dP, np0)
+		
+		x0=np.concatenate((x0,np.zeros(np0)))[i]
+		p0=np.concatenate((np.zeros(nx0),p0))[i]
+		
+		return np.array([x0,p0])
+		
 	
 					
 class PhasePortrait:

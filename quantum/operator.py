@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.linalg import matrix_power
+from scipy.linalg import expm
 
 from dynamics1D.quantum.grid import *
 from dynamics1D.quantum.wavefunction import *
@@ -7,7 +8,6 @@ from dynamics1D.quantum.wavefunction import *
 
 class Operator:
 	# Abstract class for an x acting operator
-	
 	
 	def __init__(self, grid,hermitian=False):
 		self.grid=grid
@@ -40,9 +40,6 @@ class Operator:
 			wf.x=eigenvec[:,i]
 			wf.normalize("x")
 			self.eigenvec.insert(i,wf)
-				
-		def getbraket(self,wf1,wf2):
-			return np.matmul(np.conjugate(wf1.x),np.matmul(self.M,wf2.x))
 			
 class Hamiltonian(Operator):
 	def __init__(self,grid,potential,beta=0.0):
@@ -191,13 +188,10 @@ class FloquetPropagator(TimePropagator):
 class FloquetRandomPhasePropagator(FloquetPropagator):
 	def __init__(self,grid,potential,beta=0.0,T0=1,idtmax=1):
 		FloquetPropagator.__init__(self,grid,potential,beta=beta,T0=T0,idtmax=idtmax)		
-
-		# The random phases ---> a verifier avec les chefs, phases aléatoire à chaque kick ?
 		self.Up=np.exp(1j*(np.random.rand(self.N)*2*np.pi))
 					
 	def propagate(self,wf):
 		# Propagate over one period/kick/arbitray time 
-		self.Up=np.exp(1j*(np.random.rand(self.N)*2*np.pi))
 		for idt in range(0,self.idtmax):
 			wf.p=wf.p*self.Up 
 			wf.p2x() 
@@ -221,12 +215,12 @@ class TightBindingHamiltonian(DiscreteOperator):
 		DiscreteOperator.__init__(self,lattice)
 
 		data=np.load(spectrumfile)
-		quasienergies=data['quasienergies'][:,0]
-		beta=data['beta'][:,0]*2*np.pi
+		self.quasienergies=data['quasienergies'][:,0]
+		self.beta=data['beta'][:,0]*2*np.pi
 		data.close()
 
-		self.Vn=np.fft.rfft(quasienergies)/self.N
-		self.Vnth=np.zeros(self.Vn.size)
+		self.Vn=np.fft.rfft(self.quasienergies)/self.N
+		self.Vnth=np.zeros(self.Vn.size,dtype=complex)
 		
 		self.M=np.zeros((self.N,self.N),dtype=np.complex_)
 		self.M[0]=np.concatenate((self.Vn,np.conjugate(np.flip(np.delete(self.Vn,0),axis=0))))
@@ -238,11 +232,11 @@ class TightBindingHamiltonian(DiscreteOperator):
 				
 	def computeVnth(self):
 	
-		diff=quasienergies-np.roll(quasienergies,-1)
-		dbeta=0.5*(beta[1]-beta[0])
+		diff=self.quasienergies-np.roll(self.quasienergies,-1)
+		dbeta=0.5*(self.beta[1]-self.beta[0])
 
 		ind= ((np.diff(np.sign(np.diff(np.abs(diff)))) < 0).nonzero()[0]+1)
-		beta0=beta[ind]
+		beta0=self.beta[ind]
 		W=diff[ind]
 		ind=beta0>0
 		beta0=beta0[ind]+dbeta
